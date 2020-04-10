@@ -6,8 +6,8 @@ IFS=$'\n\t'
 
 #-----------------------------------
 
-#/ Usage: binstall FILE
-#/ Description: Installs devel scripts into $HOME/bin
+#/ Usage: binstall { FILE | --help }
+#/ Description: Installs devel scripts into ${HOME}/bin
 #/ Examples: binstall loco
 #/ Options:
 #/   --help: Display this help message
@@ -21,40 +21,40 @@ IFS=$'\n\t'
 #-----------------------------------
 # Low-tech help option
 
-usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
+function __usage() { grep '^#/' "${0}" | cut -c4- ; exit 0 ; }
 expr "$*" : ".*--help" > /dev/null && usage
 
 #-----------------------------------
 # Low-tech logging function
 
-readonly LOG_FILE=""$HOME"/tmp/$(basename "$0").log"
-info()    { echo "[INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
-warning() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-error()   { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
-fatal()   { echo "[FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
+readonly LOG_FILE=""${HOME}"/tmp/$(basename "${0}").log"
+function __info()    { echo "[INFO]    $*" | tee -a "${LOG_FILE}" >&2 ; }
+function __warning() { echo "[WARNING] $*" | tee -a "${LOG_FILE}" >&2 ; }
+function __error()   { echo "[ERROR]   $*" | tee -a "${LOG_FILE}" >&2 ; }
+function __fatal()   { echo "[FATAL]   $*" | tee -a "${LOG_FILE}" >&2 ; exit 1 ; }
 
 #-----------------------------------
 # Trap functions
 
-traperr() {
-	info "ERROR: ${BASH_SOURCE[1]}.$$ at line ${BASH_LINENO[0]}"
+function __traperr() {
+	__info "ERROR: ${FUNCNAME[1]}: ${BASH_COMMAND}: $?: ${BASH_SOURCE[1]}.$$ at line ${BASH_LINENO[0]}"
 }
 
-ctrl_c(){
+function __ctrl_c(){
 	exit 2
 }
 
-cleanup() {
+function __cleanup() {
 	case "$?" in
 		0) # exit 0; success!
 			#do nothing
 			;;
 		2) # exit 2; user termination
-			info ""$(basename $0).$$": script terminated by user."
+			__info ""$(basename $0).$$": script terminated by user."
 			;;
 		*) # any other exit number; indicates an error in the script
 			#clean up stray files
-			#fatal ""$(basename $0).$$": [error message here]"
+			#__fatal ""$(basename $0).$$": [error message here]"
 			;;
 	esac
 }
@@ -62,13 +62,20 @@ cleanup() {
 #-----------------------------------
 # Main Script Wrapper
 
-if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	trap traperr ERR
-	trap ctrl_c INT
-	trap cleanup EXIT
+if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
+	trap __traperr ERR
+	trap __ctrl_c INT
+	trap __cleanup EXIT
 #-----------------------------------
 # Main Script goes here
-rsync --update "$HOME"/devel/"$1"/"$1".sh "$HOME"/bin/"$1"
+# TODO Handle empty ${1} with ask for filename
+# TODO Handle if ${1}=filename.sh
+if [[ -z "${1:-}" ]]; then
+	__usage
+else
+	rsync --update "${HOME}"/devel/"${1:-}"/"${1:-}".sh "${HOME}"/bin/"${1:-}"
+fi
+
 # Main Script ends here
 #-----------------------------------
 
@@ -81,13 +88,5 @@ exit 0
 
 # TODO
 #
-# * Handle empty ${1} with ${1:-} and __usage()
 # * Update dependencies section
 # * Update usage, description, and options section
-# * Update function __cleanup()
-# * Check that _variable="variable definition" (make sure it's in quotes)
-# * Rename $variables to ${_variables}
-# * Rename function_name() to function __function_name()
-# * Modify command substitution to "$(this_style)"
-# * Clean up stray ;'s
-# * Insert script
