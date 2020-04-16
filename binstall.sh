@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 set -o errtrace
-set -x
+#set -x
 IFS=$'\n\t'
 
 #-----------------------------------
 
-#/ Usage: binstall { FILE | --help }
+#/ Usage: binstall [ FILE | --help ]
 #/ Description: Installs devel scripts into ${HOME}/bin
 #/ Examples: binstall loco
 #/ Options:
@@ -22,7 +22,7 @@ IFS=$'\n\t'
 # Low-tech help option
 
 function __usage() { grep '^#/' "${0}" | cut -c4- ; exit 0 ; }
-expr "$*" : ".*--help" > /dev/null && usage
+expr "$*" : ".*--help" > /dev/null && __usage
 
 #-----------------------------------
 # Low-tech logging function
@@ -73,7 +73,11 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
 # Main Script goes here
 _name="${1:-}"
 
-# * If _arg_1 is empty, ask for filename else exit
+# Handle if _arg_1=filename.sh (stips off .sh)
+expr "${1:-}" : ".*\.sh" > /dev/null && _name="$(echo "${1%.sh}")"
+
+# If _arg_1 is empty, ask for filename else exit
+
 function __arg_1_empty(){
 		printf "Enter the name of the script you would like to install (blank quits): "
 		read _name
@@ -88,22 +92,19 @@ _sh_file="${_devel_dir}/${_name}.sh"
 _bin_dir="${HOME}/bin"
 _bin_file="${_bin_dir}/${_name}"
 
-# TODO Handle if _arg_1=filename.sh
-	#__arg_1_has_dot_sh
-# TODO Handle arg _arg_1 does not exist
+# TODO * Handle arg _arg_1 does not exist
 	#__arg_1_not_exists
 
+# TODO * Rework rsync line with proper $_vars when they are worked out
 function __do_install(){
 	rsync --update "${HOME}"/devel/"${_name:-}"/"${_name:-}".sh "${HOME}"/bin/"${_name:-}"
 	#rsync --update "${HOME}"/devel/"${1:-}"/"${1:-}".sh "${HOME}"/bin/"${1:-}"
-	
+	chmod 755 "${_bin_file}"
 }
 
 # Runtime
 if [[ -z "${1:-}" ]]; then
 	__arg_1_empty
-# elif Handle if _arg_1=filename.sh
-	#__arg_1_has_dot_sh
 # elif Handle arg _arg_1 does not exist
 	#__arg_1_not_exists
 elif [[ "${1:-}" =~ (-h|--help) ]]; then
@@ -127,4 +128,3 @@ exit 0
 #
 # * Update dependencies section
 # * Update usage, description, and options section
-# + If _arg_1 is empty, ask for filename else exit
