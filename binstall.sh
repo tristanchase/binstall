@@ -52,7 +52,10 @@ function __cleanup() {
 		2) # exit 2; user termination
 			__info ""$(basename $0).$$": script terminated by user."
 			;;
-		3) # exit 2; user termination
+		3) # exit 3; file not found
+			echo "File \""${_name}"\" not found in your devel scripts."
+			;;
+		9) # exit 9; exit test
 			__info ""$(basename $0).$$": ${FUNCNAME[1]} test: ok."
 			;;
 		*) # any other exit number; indicates an error in the script
@@ -73,27 +76,27 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then
 # Main Script goes here
 _name="${1:-}"
 
-# Handle if _arg_1=filename.sh (stips off .sh)
-expr "${1:-}" : ".*\.sh" > /dev/null && _name="$(echo "${1%.sh}")"
 
 # If _arg_1 is empty, ask for filename else exit
+if [[ -z "${1:-}" ]]; then
+	printf "Enter the name of the script you would like to install (blank quits): "
+	read _name
+	#_name="${_name%.sh}"
+	if [[ -z ${_name:-} ]]; then
+		exit 2
+	fi
+fi
 
-function __arg_1_empty(){
-		printf "Enter the name of the script you would like to install (blank quits): "
-		read _name
-		if [[ -z ${_name:-} ]]; then
-			exit 2
-		fi
-		__do_install
-}
+# Handle if _arg_1=filename.sh (stips off .sh)
+_name="${_name%.sh}"
+
+_finder="$(find "${HOME}"/devel -iname "${_name}".sh)"
 
 _devel_dir="${HOME}/devel/${_name}"
 _sh_file="${_devel_dir}/${_name}.sh"
 _bin_dir="${HOME}/bin"
 _bin_file="${_bin_dir}/${_name}"
 
-# TODO * Handle arg _arg_1 does not exist
-	#__arg_1_not_exists
 
 # TODO * Rework rsync line with proper $_vars when they are worked out
 function __do_install(){
@@ -103,12 +106,10 @@ function __do_install(){
 }
 
 # Runtime
-if [[ -z "${1:-}" ]]; then
-	__arg_1_empty
-# elif Handle arg _arg_1 does not exist
-	#__arg_1_not_exists
-elif [[ "${1:-}" =~ (-h|--help) ]]; then
+if [[ "${1:-}" =~ (-h|--help) ]]; then
 	__usage
+elif [[ -z "${_finder}" ]]; then
+	exit 3 # file not found
 else
 	__do_install
 fi
@@ -128,3 +129,4 @@ exit 0
 #
 # * Update dependencies section
 # * Update usage, description, and options section
+# + Handle arg _arg_1 does not exist
