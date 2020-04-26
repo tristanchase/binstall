@@ -1,16 +1,27 @@
 #!/usr/bin/env bash
-set -euo pipefail
+
+# Low-tech debug mode
+if [[ "${1:-}" =~ (-d|--debug) ]]; then
+	set -x
+	exec > >(tee ""${HOME}"/tmp/$(basename "${0}")-debug.$$") 2>&1
+	shift
+fi
+
+# Same as set -euE -o pipefail
+set -o errexit
+set -o nounset
 set -o errtrace
-#set -x
+set -o pipefail
 IFS=$'\n\t'
 
 #-----------------------------------
 
-#/ Usage: binstall [ FILE | --help ]
-#/ Description: Installs devel scripts into ${HOME}/bin
-#/ Examples: binstall loco
-#/ Options:
-#/   --help: Display this help message
+#//Usage: binstall [ {-d|--debug} ] [ FILE | {-h|--help} ]
+#//Description: Installs devel scripts into ${HOME}/bin
+#//Examples: binstall foo; binstall -d bar
+#//Options:
+#//	-d --debug	Enable debug mode
+#//	-h --help	Display this help message
 
 # Created: 2020-04-08T03:06:44-04:00
 # Tristan M. Chase <tristan.m.chase@gmail.com>
@@ -21,8 +32,8 @@ IFS=$'\n\t'
 #-----------------------------------
 # Low-tech help option
 
-function __usage() { grep '^#/' "${0}" | cut -c4- ; exit 0 ; }
-expr "$*" : ".*--help" > /dev/null && __usage
+function __usage() { grep '^#//' "${0}" | cut -c4- ; exit 0 ; }
+expr "$*" : ".*-h\|--help" > /dev/null && __usage
 
 #-----------------------------------
 # Low-tech logging function
@@ -81,16 +92,19 @@ _name="${1:-}"
 if [[ -z "${1:-}" ]]; then
 	printf "Enter the name of the script you would like to install (blank quits): "
 	read _name
-	#_name="${_name%.sh}"
 	if [[ -z ${_name:-} ]]; then
 		exit 2
 	fi
 fi
 
-# Handle if _arg_1=filename.sh (stips off .sh)
+# Handle if _arg_1=filename.sh (strips off .sh)
 _name="${_name%.sh}"
 
+# Exit if file does not exist
 _finder="$(find "${HOME}"/devel -iname "${_name}".sh)"
+if [[ -z "${_finder}" ]]; then
+	exit 3 # file not found
+fi
 
 _devel_dir="${HOME}/devel/${_name}"
 _sh_file="${_devel_dir}/${_name}.sh"
@@ -98,22 +112,12 @@ _bin_dir="${HOME}/bin"
 _bin_file="${_bin_dir}/${_name}"
 
 
-# TODO * Rework rsync line with proper $_vars when they are worked out
 function __do_install(){
-	rsync --update "${HOME}"/devel/"${_name:-}"/"${_name:-}".sh "${HOME}"/bin/"${_name:-}"
-	#rsync --update "${HOME}"/devel/"${1:-}"/"${1:-}".sh "${HOME}"/bin/"${1:-}"
+	rsync --update "${_sh_file}" "${_bin_file}"
 	chmod 755 "${_bin_file}"
 }
 
-# Runtime
-if [[ "${1:-}" =~ (-h|--help) ]]; then
-	__usage
-elif [[ -z "${_finder}" ]]; then
-	exit 3 # file not found
-else
-	__do_install
-fi
-# End runtime
+__do_install
 
 # Main Script ends here
 #-----------------------------------
@@ -127,6 +131,3 @@ exit 0
 
 # TODO
 #
-# * Update dependencies section
-# * Update usage, description, and options section
-# + Handle arg _arg_1 does not exist
