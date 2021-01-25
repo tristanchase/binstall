@@ -3,7 +3,7 @@
 # Low-tech debug mode
 if [[ "${1:-}" =~ (-d|--debug) ]]; then
 	set -x
-	exec > >(tee ""${HOME}"/tmp/$(basename "${0}")-debug.$$") 2>&1
+	exec > >(tee "${HOME}/tmp/$(basename "${0}")-debug.$$") 2>&1
 	shift
 fi
 
@@ -38,7 +38,7 @@ expr "$*" : ".*-h\|--help" > /dev/null && __usage
 #-----------------------------------
 # Low-tech logging function
 
-readonly LOG_FILE=""${HOME}"/tmp/$(basename "${0}").log"
+readonly LOG_FILE="${HOME}/tmp/$(basename "${0}").log"
 function __info()    { echo "[INFO]    $*" | tee -a "${LOG_FILE}" >&2 ; }
 function __warning() { echo "[WARNING] $*" | tee -a "${LOG_FILE}" >&2 ; }
 function __error()   { echo "[ERROR]   $*" | tee -a "${LOG_FILE}" >&2 ; }
@@ -101,7 +101,7 @@ fi
 _name="${_name%.sh}"
 
 # Exit if file does not exist
-_finder="$(find "${HOME}"/devel -iname "${_name}".sh)"
+_finder="$(find ${HOME}/devel -iname "${_name}".sh)"
 if [[ -z "${_finder}" ]]; then
 	exit 3 # file not found
 fi
