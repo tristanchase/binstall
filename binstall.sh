@@ -93,7 +93,7 @@ function __do_install__ {
 	chmod 755 "${_bin_file}"
 }
 
-__do_install
+__do_install__
 
 
 } #end __main_script__
