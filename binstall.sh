@@ -144,7 +144,7 @@ function __list_files__ {
 
 	for _filename in "${_devel_list[@]}"; do
 			printf "${_body_format}" "${_filename}" "$(__get_devel_time__)" "$(__get_bin_time__)"
-	done
+	done | more
 	exit 0
 }
 
