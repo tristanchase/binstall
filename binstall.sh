@@ -54,10 +54,10 @@
 
 #<main>
 # Initialize variables
-_listfile="${HOME}/tmp/binstall.$$.tempfile"
+#_listfile="${HOME}/tmp/binstall.$$.tempfile"
 
 # List of temp files to clean up on exit (put last)
-_tempfiles=("${_listfile}")
+#_tempfiles=("${_listfile}")
 
 # Put main script here
 function __main_script__ {
@@ -118,8 +118,8 @@ function __compare_dirs__ {
 	)
 }
 
-function __get_bin_time__ {
-	stat -c "%"${_time_style}"" "${_bin_dir}"/"${_filename%.sh}"
+function __get_bin_time_reg__ {
+	stat -c "%y" "${_bin_dir}"/"${_filename%.sh}"
 }
 
 function __get_bin_time_epoch__ {
@@ -128,12 +128,12 @@ function __get_bin_time_epoch__ {
 
 function __get_col_widths__ {
 	_max_filename_length=$(printf "%s\n" "${_devel_list[@]}" | wc -L)
-	_devel_time_col_width=$(__get_devel_time__ | wc -L)
-	_bin_time_col_width=$(__get_bin_time__ | wc -L)
+	_devel_time_col_width=$(__get_devel_time_reg__ | wc -L)
+	_bin_time_col_width=$(__get_bin_time_reg__ | wc -L)
 }
 
-function __get_devel_time__ {
-	stat -c "%"${_time_style}"" "${_devel_dir}"/"${_filename%.sh}"/"${_filename}"
+function __get_devel_time_reg__ {
+	stat -c "%y" "${_devel_dir}"/"${_filename%.sh}"/"${_filename}"
 }
 
 function __get_devel_time_epoch__ {
@@ -142,25 +142,27 @@ function __get_devel_time_epoch__ {
 
 function __list_files__ {
 	__compare_dirs__
-	_time_style="y"
 	__get_col_widths__
 	_column_format="%-"${_max_filename_length}"s | %-"${_devel_time_col_width}"s | %-"${_bin_time_col_width}"s\n"
+	_listfile="${HOME}/tmp/binstall.$$.tempfile"
 	touch "${_listfile}"
 
 	printf "${_column_format}" "filename" "devel time" "bin time" > "${_listfile}"
 	__separator__ >> "${_listfile}"
 	for _filename in "${_devel_list[@]}"; do
 		if [[ "$(__get_devel_time_epoch__)" -gt "$(__get_bin_time_epoch__)" ]]; then
-			printf ""${fg_red}"${_column_format}"${reset}"" "${_filename}" "$(__get_devel_time__)" "$(__get_bin_time__)"
+			printf ""${fg_red}"${_column_format}"${reset}"" "${_filename}" "$(__get_devel_time_reg__)" "$(__get_bin_time_reg__)"
 		else
-			printf "${_column_format}" "${_filename}" "$(__get_devel_time__)" "$(__get_bin_time__)"
+			printf "${_column_format}" "${_filename}" "$(__get_devel_time_reg__)" "$(__get_bin_time_reg__)"
 		fi
 
 	done >> "${_listfile}"
 
 	cat "${_listfile}" | more
 
+	_tempfiles=("${_listfile}")
 	__local_cleanup__
+	unset _tempfiles
 
 	exit 0
 }
@@ -193,10 +195,9 @@ function __separator__ {
 
 function __update__ {
 	__compare_dirs__
-	_time_style="Y"
 	_update_list=(
 		$(for _filename in "${_devel_list[@]}"; do
-		if [[ "$(__get_devel_time__)" -gt "$(__get_bin_time__)" ]]; then
+		if [[ "$(__get_devel_time_epoch__)" -gt "$(__get_bin_time_epoch__)" ]]; then
 			printf "%s\n" "${_filename}"
 		fi
 		done)
