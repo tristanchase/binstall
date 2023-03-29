@@ -239,17 +239,16 @@ source ${HOME}/.functions.sh
 # Get some basic options
 # TODO Make this more robust
 #<options>
-if [[ "${1:-}" =~ (-d|--debug) ]]; then
-	__debugger__
-elif [[ "${1:-}" =~ (-h|--help) ]]; then
-	__usage__
-elif [[ "${1:-}" =~ (-u|--update) ]]; then
-	__update__
-elif [[ "${1:-}" =~ (-l|--list) ]]; then
-	__list_files__
-else
-	_name="${1:-}"
-fi
+shopt -s extglob
+case "${1:-}" in
+	(-d|--debug) __debugger__ ;;
+	(-h|--help) __usage__ ;;
+	(-u|--update) __update__ ;;
+	(-l|--list) __list_files__ ;;
+	(-*|--*) printf "%b\n" "Option \""${1:-}"\" not recognized." ; __usage__ ;;
+	(*) _name="${1:-}"
+esac
+shopt -u extglob
 #</options>
 
 #-----------------------------------
