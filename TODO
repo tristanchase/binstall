@@ -1,0 +1,10 @@
+* update documentation files in ~/.local/share/$_script/
+	* README.adoc
+	* TUTORIAL.adoc
+	* anything else
+
+Files:
+~/devel/binstall/
+~/devel/binstall/binstall.sh
+~/.local/share/
+~/.config/
