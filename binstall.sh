@@ -207,14 +207,24 @@ function __update__ {
 		exit 0
 	fi
 
-	printf "%b\n" "The following "${#_update_list[@]}" files can be updated in your ~/bin:"
+	_file_count="${#_update_list[@]}"
+	if [[ "${_file_count}" -gt 1 ]]; then
+		_file_noun="files"
+		_file_obj="them"
+	else
+		_file_noun="file"
+		_file_obj="it"
+	fi
+
+	printf "%b\n" "The following "${_file_count}" "${_file_noun}" can be updated in your ~/bin:"
 	printf "%s\n" "${_update_list[@]}"
-	printf "%b" "Would you like to update them (y/N)? "
+	printf "%b" "Would you like to update "${_file_obj}" (y/N)? "
 	read _update_yN
 
 	if [[ "${_update_yN}" =~ (y|Y) ]]; then
+		printf "%b\n"
 		for _file in "${_update_list[@]}"; do
-			binstall "${_file}"
+			binstall "${_file}" && printf "%b\n" "${_file}"" updated ""$(__get_bin_time_reg__)"
 		done
 	fi
 	exit 0
