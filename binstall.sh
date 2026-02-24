@@ -204,6 +204,7 @@ function __update__ {
 	)
 
 	if [[ -z "${_update_list[@]}" ]]; then
+		printf "%b\n" "Files are up to date."
 		exit 0
 	fi
 
