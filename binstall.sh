@@ -217,10 +217,13 @@ function __update__ {
 		_file_obj="it"
 	fi
 
-	printf "%b\n" "The following "${_file_count}" "${_file_noun}" can be updated in your ~/bin:"
-	printf "%s\n" "${_update_list[@]}"
+	printf "%b\n" "The following "${_file_noun}" can be updated in your ~/bin:"
+	printf "  %s\n" "${_update_list[@]}"
 	printf "%b" "Would you like to update "${_file_obj}" (y/N)? "
 	read _update_yN
+
+	# Allow user to choose one, many, or all from the list
+	# (Add chooser here)
 
 	if [[ "${_update_yN}" =~ (y|Y) ]]; then
 		printf "%b\n"
