@@ -222,6 +222,10 @@ function __update__ {
 	printf "%b" "Would you like to update "${_file_obj}" (y/N)? "
 	read _update_yN
 
+	# Offer user a chance to inspect differences in files:
+	#   - binstall --list
+	#   - diff the files
+
 	# Allow user to choose one, many, or all from the list
 	# (Add chooser here)
 
