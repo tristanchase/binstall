@@ -158,7 +158,7 @@ function __list_files__ {
 
 	done >> "${_listfile}"
 
-	cat "${_listfile}" | more
+	cat "${_listfile}" | __pager__
 
 	_tempfiles=("${_listfile}")
 	__local_cleanup__
