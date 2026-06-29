@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+_script_name=$(basename -s .sh "$0")
 #-----------------------------------
 # Usage Section
 
@@ -204,7 +205,7 @@ function __update__ {
 	)
 
 	if [[ -z "${_update_list[@]}" ]]; then
-		printf "%b\n" "Files are up to date."
+		printf "%b\n" ""${_script_name}": Files are up to date."
 		exit 0
 	fi
 
