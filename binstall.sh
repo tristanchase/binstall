@@ -1,34 +1,52 @@
 #!/usr/bin/env bash
 
+# Same as set -euE -o pipefail
+#set -o errexit
+#set -o nounset
+#set -o errtrace
+#set -o pipefail
+IFS=$'\n\t'
+
+shopt -s globstar
+shopt -s dotglob
+shopt -s extglob
+
 _script_name=$(basename -s .sh "$0")
+
 #-----------------------------------
 # Usage Section
 
-#<usage>
-#//Usage: binstall [ {-d|--debug} ] [ FILE | {-h|--help} | {-l|--list} | {-u|--update} ]
-#//Description: Installs devel scripts into ${HOME}/bin
-#//Examples: binstall foo; binstall -d bar; binstall --update
-#//Options:
-#//	-d --debug	Enable debug mode
-#//	-h --help	Display this help message
-#//	-l --list	List installed scripts
-#//	-u --update	Update installed scripts
-#</usage>
+function __show_help__ {
+	cat << EOF
+Usage: ${_script_name} [OPTIONS] [<file>]
 
-#<created>
+Description: Installs devel scripts into ${HOME}/bin
+
+Options:
+  -d, --debug	Enable debug mode
+  -h, --help	Display this help message
+  -l, --list	List installed scripts
+  -u, --update	Update installed scripts
+
+Examples:
+  ${_script_name} foo
+  ${_script_name} --debug bar
+EOF
+
+exit 2
+}
+
+#-----------------------------------
+
 # Created: 2020-04-08T03:06:44-04:00
 # Tristan M. Chase <tristan.m.chase@gmail.com>
-#</created>
 
-#<depends>
 # Depends on:
 #   rsync
-#</depends>
 
 #-----------------------------------
 # TODO Section
 
-#<todo>
 # TODO
 
 # DONE
@@ -41,19 +59,15 @@ _script_name=$(basename -s .sh "$0")
 # + Update usage, description, and options section
 # + Update dependencies section
 
-#</todo>
 
 #-----------------------------------
 # License Section
 
-#<license>
 # Put license here
-#</license>
 
 #-----------------------------------
 # Runtime Section
 
-#<main>
 # Initialize variables
 #_listfile="${HOME}/tmp/binstall.$$.tempfile"
 
@@ -81,7 +95,7 @@ _name="${_name%.sh}"
 # Exit if file does not exist
 _finder="$(find ${HOME}/devel -iname "${_name}".sh)"
 if [[ -z "${_finder}" ]]; then
-	printf "%b\n" "File \""${_name}".sh\" not found in directory ~/devel/"${_name}"."
+	printf "%b\n" ""${_script_name}": File \""${_name}".sh\" not found in directory ~/devel/"${_name}"."
 	exit 3 # file not found
 fi
 
@@ -90,22 +104,13 @@ _sh_file="${_devel_dir}/${_name}.sh"
 _bin_dir="${HOME}/bin"
 _bin_file="${_bin_dir}/${_name}"
 
-
-function __do_install__ {
-	rsync --update "${_sh_file}" "${_bin_file}"
-	chmod 755 "${_bin_file}"
-}
-
 __do_install__
 
-
 } #end __main_script__
-#</main>
 
 #-----------------------------------
 # Local functions
 
-#<functions>
 function __compare_dirs__ {
 	_bin_dir="${HOME}/bin"
 	_devel_dir="${HOME}/devel"
@@ -117,6 +122,11 @@ function __compare_dirs__ {
 			stat -c "'%n'" "${_devel_dir}"/"${_item}"/"${_item}".sh 2>/dev/null | xargs basename -a 2>/dev/null
 		done)
 	)
+}
+
+function __do_install__ {
+	rsync --update "${_sh_file}" "${_bin_file}"
+	chmod 755 "${_bin_file}"
 }
 
 function __get_bin_time_reg__ {
@@ -239,7 +249,6 @@ function __update__ {
 	exit 0
 }
 
-#</functions>
 
 #-----------------------------------
 # Source helper functions
@@ -257,29 +266,15 @@ source ${HOME}/.functions.sh
 #-----------------------------------
 # Get some basic options
 # TODO Make this more robust
-#<options>
-shopt -s extglob
 case "${1:-}" in
 	(-d|--debug) __debugger__ ;;
-	(-h|--help) __usage__ ;;
-	(-u|--update) __update__ ;;
+	(-h|--help) __show_help__ ; exit 2 ;;
 	(-l|--list) __list_files__ ;;
-	(-*|--*) printf "%b\n" "Option \""${1:-}"\" not recognized." ; __usage__ ;;
+	(-u|--update) __update__ ;;
+	(-*|--*)  printf "%b\n" ""${_script_name}": Option \""${1:-}"\" not recognized."  1>&2 ; __show_help__ ; exit 2  1>&2 ;;
+	#('') printf "%b\n" ""${_script_name}": Argument required." 1>&2 ; __show_help__ ; exit 2  1>&2 ;;
 	(*) _name="${1:-}"
 esac
-shopt -u extglob
-#</options>
-
-#-----------------------------------
-# Bash settings
-# Same as set -euE -o pipefail
-#<settings>
-set -o errexit
-set -o nounset
-set -o errtrace
-set -o pipefail
-IFS=$'\n\t'
-#</settings>
 
 #-----------------------------------
 # Main Script Wrapper
